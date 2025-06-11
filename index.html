@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suggest an Edit Modal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom scrollbar for better aesthetics */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+         /* Simple animation for modal appearance */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .modal-fade-in {
+            animation: fadeIn 0.2s ease-out;
+        }
+        .map-container {
+            height: 250px;
+            border-radius: 0.5rem;
+            border: 1px solid #d1d5db;
+            z-index: 0;
+        }
+    </style>
+</head>
+<body class="bg-gray-800 flex items-center justify-center min-h-screen">
+
+    <!-- The Modal -->
+    <div id="editModal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col modal-fade-in">
+
+            <!-- Modal Header -->
+            <div class="flex justify-between items-center p-6 border-b border-gray-200">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800">Suggest an Edit</h2>
+                    <p class="text-sm text-gray-500">Your suggestions help us keep our information accurate. Suggest changes to any of the fields below.</p>
+                </div>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fas fa-times fa-lg"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body with Scrolling -->
+            <div class="p-8 space-y-8 overflow-y-auto custom-scrollbar">
+
+                <!-- Basic Information Section -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="placeName" class="block text-sm font-semibold text-gray-700 mb-1">Place Name</label>
+                        <div class="relative">
+                            <input type="text" id="placeName" value="Sysco Indianapolis" class="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-gray-500">
+                            <i class="fas fa-pencil-alt absolute top-1/2 right-4 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="category" class="block text-sm font-semibold text-gray-700 mb-1">Category</label>
+                        <div class="relative">
+                            <select id="category" class="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-white text-gray-500 appearance-none">
+                                <option>Distribution Center</option>
+                                <option>Warehouse</option>
+                                <option>Retail Store</option>
+                                <option>Office</option>
+                            </select>
+                            <i class="fas fa-pencil-alt absolute top-1/2 right-4 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact & Location Section -->
+                <div class="space-y-6">
+                     <div>
+                        <label for="address" class="block text-sm font-semibold text-gray-700 mb-1">Address</label>
+                         <div class="relative">
+                            <textarea id="address" rows="2" class="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-gray-500">4000 West 62nd Street, Indianapolis, IN 46268</textarea>
+                            <i class="fas fa-pencil-alt absolute top-4 right-4 text-gray-400 pointer-events-none"></i>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                         <div>
+                            <label for="website" class="block text-sm font-semibold text-gray-700 mb-1">Website URL</label>
+                             <div class="relative">
+                                <input type="url" id="website" value="sysco.com" class="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-gray-500">
+                                <i class="fas fa-pencil-alt absolute top-1/2 right-4 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="phone" class="block text-sm font-semibold text-gray-700 mb-1">Phone Number</label>
+                            <div class="relative">
+                                <input type="tel" id="phone" value="307-291-2020" class="w-full pl-4 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition text-gray-500">
+                                <i class="fas fa-pencil-alt absolute top-1/2 right-4 transform -translate-y-1/2 text-gray-400 pointer-events-none"></i>
+                            </div>
+                        </div>
+                    </div>
+                     <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Coordinates</label>
+                        <p class="text-sm text-gray-500 mb-2">Drag the pin to adjust the location.</p>
+                        <div id="coordMap" class="map-container"></div>
+                        <div id="coordDisplay" class="text-sm text-gray-600 mt-2 text-center">Lat: 39.868833, Lng: -86.228526</div>
+                    </div>
+                </div>
+
+                <!-- Operating Hours Section -->
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Operating Hours</h3>
+                    <div id="operatingHours" class="space-y-3">
+                        <!-- JS will populate this -->
+                    </div>
+                </div>
+
+                <!-- Geofence Section -->
+                 <div>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Geofence</h3>
+                    <p class="text-sm text-gray-500 mb-4">Click and drag on the map to draw or adjust the site's boundary.</p>
+                    <div id="geofenceMap" class="map-container"></div>
+                </div>
+
+                <!-- Gates Section -->
+                <div>
+                    <div class="flex justify-between items-center mb-4">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-800">Gates</h3>
+                            <p class="text-sm text-gray-500">Click a gate to see details or drag to move.</p>
+                        </div>
+                        <button onclick="addGate()" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-semibold flex items-center gap-2">
+                            <i class="fas fa-plus"></i>
+                            Add Gate
+                        </button>
+                    </div>
+                    <div id="gatesMap" class="map-container"></div>
+                </div>
+
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="flex justify-end items-center p-6 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
+                <button onclick="closeModal()" class="px-6 py-2.5 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors font-semibold mr-3">Cancel</button>
+                <button onclick="submitChanges()" class="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow-sm">Submit Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script>
+        const operatingHoursContainer = document.getElementById('operatingHours');
+        const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        const sampleHours = {
+            'Wednesday': { open: '08:00', close: '17:00' },
+        };
+
+        // Populate operating hours
+        daysOfWeek.forEach(day => {
+            const hasHours = sampleHours[day];
+            const hoursHTML = `
+                <div class="flex items-center gap-4 p-3 rounded-lg even:bg-gray-50">
+                    <label class="w-28 font-medium text-gray-700">${day}</label>
+                    <input type="checkbox" id="toggle_${day}" class="h-6 w-10 rounded-full appearance-none bg-gray-300 checked:bg-blue-500 transition-all duration-300" ${hasHours ? 'checked' : ''}>
+                    <div class="flex items-center gap-2 flex-grow ${hasHours ? '' : 'opacity-50'}" id="time_inputs_${day}">
+                        <input type="time" value="${hasHours ? hasHours.open : '09:00'}" class="w-full px-3 py-1 border border-gray-300 rounded-md" ${hasHours ? '' : 'disabled'}>
+                        <span class="text-gray-500">-</span>
+                        <input type="time" value="${hasHours ? hasHours.close : '17:00'}" class="w-full px-3 py-1 border border-gray-300 rounded-md" ${hasHours ? '' : 'disabled'}>
+                    </div>
+                </div>
+            `;
+            operatingHoursContainer.innerHTML += hoursHTML;
+        });
+        
+        // Add event listeners for toggles
+        daysOfWeek.forEach(day => {
+            const toggle = document.getElementById(`toggle_${day}`);
+            const timeInputsContainer = document.getElementById(`time_inputs_${day}`);
+            toggle.addEventListener('change', () => {
+                const inputs = timeInputsContainer.querySelectorAll('input[type="time"]');
+                if (toggle.checked) {
+                    timeInputsContainer.classList.remove('opacity-50');
+                    inputs.forEach(input => input.disabled = false);
+                } else {
+                    timeInputsContainer.classList.add('opacity-50');
+                    inputs.forEach(input => input.disabled = true);
+                }
+            });
+        });
+
+        // Function to add a new gate input row
+        function addGate() {
+           console.log("Add Gate button clicked. In a real app, this would open a form to add a new gate to the map.");
+        }
+        
+        // --- Map Initialization ---
+        const initialLat = 39.868833;
+        const initialLng = -86.228526;
+        const coordDisplay = document.getElementById('coordDisplay');
+
+        let coordMap, geofenceMap, gatesMap;
+        
+        function createOpenStreetMapTileLayer() {
+            return L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            });
+        }
+
+        // Delay map initialization slightly to ensure modal is rendered
+        setTimeout(() => {
+            // Initialize Coordinate Map
+            coordMap = L.map('coordMap').setView([initialLat, initialLng], 15);
+            createOpenStreetMapTileLayer().addTo(coordMap);
+            const marker = L.marker([initialLat, initialLng], { draggable: true }).addTo(coordMap);
+            marker.on('dragend', function(event) {
+                const position = marker.getLatLng();
+                coordDisplay.textContent = `Lat: ${position.lat.toFixed(6)}, Lng: ${position.lng.toFixed(6)}`;
+            });
+
+            // Initialize Geofence Map
+            geofenceMap = L.map('geofenceMap').setView([initialLat, initialLng], 15);
+            createOpenStreetMapTileLayer().addTo(geofenceMap);
+            const geofenceCoords = [
+                [39.870, -86.230], [39.870, -86.226],
+                [39.867, -86.226], [39.867, -86.230]
+            ];
+            L.polygon(geofenceCoords, { color: '#6f42c1', weight: 2, fillColor: '#6f42c1', fillOpacity: 0.3 }).addTo(geofenceMap);
+
+            // Initialize Gates Map
+            gatesMap = L.map('gatesMap').setView([initialLat, initialLng], 16);
+            createOpenStreetMapTileLayer().addTo(gatesMap);
+
+            // Add POI markers for gates
+            const mainGate = L.circleMarker([39.8688, -86.2295], {
+                radius: 8,
+                color: '#ffffff',
+                weight: 2,
+                fillColor: '#dc3545', // Red
+                fillOpacity: 1
+            }).addTo(gatesMap).bindPopup('<b>Main Gate</b><br>Primary entrance for all traffic.');
+            
+            const shippingGate = L.circleMarker([39.8695, -86.2270], {
+                radius: 8,
+                color: '#ffffff',
+                weight: 2,
+                fillColor: '#007bff', // Blue
+                fillOpacity: 1
+            }).addTo(gatesMap).bindPopup('<b>Shipping Gate</b><br>For deliveries only.');
+
+            // A fix for maps in modals where tiles might not load correctly.
+            coordMap.invalidateSize();
+            geofenceMap.invalidateSize();
+            gatesMap.invalidateSize();
+        }, 100);
+
+        // --- Modal Control Functions ---
+        function closeModal() {
+            console.log("Modal closed.");
+        }
+
+        function submitChanges() {
+            console.log("Submitting changes...");
+            closeModal();
+            const customAlert = document.createElement('div');
+            customAlert.className = 'fixed top-5 right-5 bg-green-500 text-white py-2 px-4 rounded-lg shadow-lg animate-pulse';
+            customAlert.textContent = 'Changes submitted for review!';
+            document.body.appendChild(customAlert);
+            setTimeout(() => {
+                customAlert.remove();
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
